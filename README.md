@@ -1,7 +1,7 @@
 # Kubernetes Crash Course
 
-### Scope
-We'll be learning the basics of Kubernetes by locally hosting a toy Go server alongside Nginx.
+**Scope:**
+We'll be learning the basics of Kubernetes by locally hosting a toy Go server.
 
 [./backend/server.go](./backend/server.go) implements a single API endpoint. To start, go ahead and run it locally like so:
 
@@ -16,11 +16,12 @@ curl http://localhost:8000/fruit
 Or visit http://localhost:8000/fruit in your browser.
 
 
-### Getting Started
+## Part 1: Kubernetes Basics
 
-With that out of the way let's set up your Kubernetes dev environment.
 
 1. Setup [Minikube](https://minikube.sigs.k8s.io/docs/start/)
+
+Minikube provides a pre-configured host ready to run kubernetes.
 
 ````bash
 # start a kubernetes single node "cluster" (inside Docker)
@@ -232,3 +233,20 @@ kubectl logs -l app=backend --prefix=true -f
 # now in another terminal try to hit the backend-service
 kubectl run debug --image=nicolaka/netshoot -it --rm --restart=Never -- curl http://backend-service/fruit
 ````
+
+Observe the logs as you hit the backend, and try hitting it a few times. You'll notice that a different pod may respond to the request each time.
+
+
+## Part 2: Helm Basics
+
+Consider the yaml configs (a.k.a. "manifests") we created in Part 1. How would we distribute them to the world if we wanted to let anyone run our backend in the same way? While we could just pass around the backend.yaml file, if our system was more complex with many microservices across many yaml files this could become less portable. Also what if we want to deploy our manifests slightly differently in our staging cluster vs production?
+
+
+Enter Helm. Helm is a package manager for Kubernetes manifests, allowing pre-packaged resources called `Charts` (i.e. a set of deployments, services, etc) to be shared and quickly installed in any kubernetes cluster. It also let's you use templating to dynamically define your manifests, giving you levers to customize the behavior in different environents.
+
+In this section we'll learn the basics of Helm by refactoring our work above into a simple helm chart.
+
+* [Explore the Helm docs](https://helm.sh/docs/intro/using_helm) for more information.
+
+
+1. TODO
