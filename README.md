@@ -134,15 +134,101 @@ spec:
       targetPort: 8000 # must match the pod's `containerPort`
 ````
 
-
 ````bash
-# and apply the changes
+# and now apply the changes
 kubectl apply -f backend.yaml
 
 # now check what IPs have been added to the service
 # (the IP listed should match your pod from earlier)
-kubectl get endpoings backend-service
+kubectl get endpoints backend-service
 #NAME              ENDPOINTS         AGE
 #backend-service   10.244.0.9:8000   12m
 ````
 
+And now let's try to hit the service under the DNS name "backend-service". To do this we'll launch a temporary pod named "debug", containing tools like the curl command.
+
+````
+kubectl run debug --image=nicolaka/netshoot -it --rm --restart=Never -- sh
+
+# ^this may take a while to pull the image, but you can always monitor the status in a new terminal:
+watch -n 1 kubectl describe pods debug
+
+# once the "debug" pod is launched run inside:
+curl http://backend-service/fruit
+# then use <ctrl>d to kill the pod
+````
+
+5. Launching your first deployment
+
+Now what if you wanted to scale to 3 instances of the backend pod? For this we'll use the `deployment` resource. A deployment handles spawning pods (from a template), ensuring the desired "replica" count (e.g. 3) is always met.
+* See the [deployment docs](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/) for more info.
+
+
+Modify backend.yaml again, this time DELETE the entire `kind: pod` section, then add this in its place:
+
+````yaml
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: backend
+  labels:
+    app: backend
+
+spec:
+  # indicate we'd prefer 3 instances of the pod
+  replicas: 3
+  selector:
+    matchLabels:
+      app: backend
+
+  # here we describe how our pods should be created
+  template:
+    # this part is identical to the pod we defined in step 3:
+    metadata:
+      name: backend
+
+      labels:
+        app: backend
+
+    spec:
+      containers:
+        - name: backend
+          image: backend:latest
+          imagePullPolicy: Never # this is a local image
+          ports:
+          # indicate this pod shall expose port 8000
+          - containerPort: 8000
+
+# (definition of our service from step 4 continues below)
+---
+# ...
+````
+
+````bash
+# let's check on our existing pod
+kubectl get pod
+
+# and delete it
+kubectl delete pod backend
+
+# now apply, creating the "deployment" resource
+kubectl apply -f backend.yaml
+````
+
+Our deployment should immediately create three backend pods. Let's check:
+
+````bash
+kubectl get pods
+# NAME                      READY   STATUS    RESTARTS   AGE
+# backend-5b664f9c6-284bv   1/1     Running   0          26s
+# backend-5b664f9c6-fh856   1/1     Running   0          26s
+# backend-5b664f9c6-xc7bk   1/1     Running   0          26s
+
+# and we can stream the logs from all our backend pods at once
+# (note that we can filter by the label app=backend here)
+kubectl logs -l app=backend --prefix=true -f
+
+# now in another terminal try to hit the backend-service
+kubectl run debug --image=nicolaka/netshoot -it --rm --restart=Never -- curl http://backend-service/fruit
+````
