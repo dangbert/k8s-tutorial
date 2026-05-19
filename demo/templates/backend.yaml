@@ -29,7 +29,11 @@ spec:
           imagePullPolicy: Never # this is a local image
           ports:
           # indicate this pod shall expose port 8000
-          - containerPort: 8000
+          - containerPort: {{ .Values.backend.port }}
+
+          env:
+          - name: PORT
+            value: {{ .Values.backend.port | quote }}
 
 ---
 apiVersion: v1
@@ -49,4 +53,4 @@ spec:
   ports:
     - protocol: TCP
       port: 80 # port for the service itself to expose on its IP
-      targetPort: 8000 # must match the pod's `containerPort`
+      targetPort: {{ .Values.backend.port }}
