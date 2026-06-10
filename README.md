@@ -9,7 +9,7 @@ Start by cloning this repo
 git clone https://github.com/dangbert/k8s-tutorial.git && cd k8s-tutorial
 ````
 
-Noticed that [./backend/server.go](./backend/server.go) implements a few API endpoints. To start, go ahead and run it locally like so:
+Notice that [./backend/server.go](./backend/server.go) implements a few API endpoints. To start, go ahead and run it locally like so:
 
 ````bash
 cd backend/
